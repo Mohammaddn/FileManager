@@ -1,0 +1,203 @@
+﻿
+
+@{
+    Layout = null;
+
+}
+<style>
+    .fileUpload {
+        position: relative;
+        overflow: hidden;
+    }
+
+        .fileUpload input.upload {
+            position: absolute;
+            top: 0;
+            right: 0;
+            margin: 0;
+            padding: 0;
+            font-size: 20px;
+            cursor: pointer;
+            opacity: 0;
+            filter: alpha(opacity=0);
+        }
+    .col-lg-1 {
+        float: left !important;
+    }
+
+</style>
+<script src="~/Scripts/jquery-1.10.2.min.js"></script>
+<link href="/FileManager/css/Style.css" rel="stylesheet" />
+<div>
+    @Html.Raw(ViewBag.L)
+</div>
+<div id="ctmenu" class="FolderMenu" dir="ltr" style="text-align:left !important">
+    <div class="MenuLink" onclick="OpenFolder($('.Selectt').find('a').data('path'));">Open</div>
+    <div class="MenuLink" onclick="CopyFile(0);">Copy</div>
+    <div class="MenuLink" onclick="RenameFolder();">Rename</div>
+    <div class="MenuLink" onclick="DeleteFile();">Delete</div>
+    <div class="MenuLink" onclick="ZipFile();">Compress</div>
+</div>
+<div id="multis" class="FolderMenu" dir="ltr" style="text-align:left !important">
+    <div class="MenuLink" onclick="CopyFile(0);">Copy</div>
+    <div class="MenuLink" onclick="CopyFile(1);">Move</div>
+    <div class="MenuLink" onclick="ZipFile();">Compress</div>
+    <div class="MenuLink" onclick="DeleteFile();">Delete</div>
+
+</div>
+<div id="ctmenu3" class="FolderMenu" dir="ltr" style="text-align:left !important">
+    <div class="MenuLink" onclick="OpenFileMenu();">Download</div>
+    <div class="MenuLink" onclick="copyToClipboard();">Copy Link Location</div>
+    <div class="MenuLink" onclick="DeleteFile();">Delete</div>
+    <div class="MenuLink" id="exf" onclick="ExtractZip();" style="display:none">Extract</div>
+    <div class="MenuLink" onclick="CopyFile(0);">Copy</div>
+    <div class="MenuLink" onclick="CopyFile(1);">Move</div>
+    <div class="MenuLink" onclick="RenameFile();">Rename</div>
+    <div class="MenuLink" onclick="ZipFile();">Compress</div>
+
+</div>
+<div id="ctmenu2" class="FolderMenu" dir="ltr" style="text-align:left !important">
+    <div class="MenuLink" onclick="RefreshFolder();">Refresh</div>
+    <div class="MenuLink" onclick="CreateFolder();">New Folder</div>
+
+    @Html.Hidden("ID", 65512)
+    <input type="hidden" id="pphup" value="" name="Path" />
+    <div class="MenuLink fileUpload"><input type="file" id="uploadFile" onclick="ShowUpload()" class="upload" name="file" data-val="true" data-val-required="please select a file" onchange="UploadImage()" />Upload File</div>
+    <div id="uploadsContainer"></div>
+
+    <div class="MenuLink" onclick="PasteFile();">Paste</div>
+</div>
+<p style="display:none" id="ActionLod"></p>
+<p id="pp" style="display:none">"</p>
+<script src="/FileManager/js/GetFiles.js"></script>
+<div id="det"></div>
+<script type="text/javascript">
+    var isFirstLoad = true;
+    var upp = false;
+    var xhr = new XMLHttpRequest();
+
+    function UploadImage() {
+
+
+
+        // check for size of file not greater than 1MB
+        if ($("#uploadFile").val()) {
+
+            $("#lod").css({ visibility: "visible" });
+            var iSize = ($("#uploadFile")[0].files[0].size);
+            var iFormat = ($("#uploadFile")[0].files[0].name);
+            iFormat = iFormat.substr(iFormat.lastIndexOf(".") + 1);
+            iFormat = iFormat.toLowerCase();
+            upp = true;
+
+            var data = new FormData();
+            var file = $("#uploadFile").get(0).files;
+            if (file.length == 0) {
+                swal("شما هیچ فایلی انتخاب نکرده اید", "", "error");
+            } else {
+
+                data.append("seckey", $("#seckey").val());
+                data.append("File", file[0]);
+                data.append("Path", $("#ph").val());
+                $("#progressPersent").empty();
+                $("#ll").css({ display: "block" });;
+                $("#progress").css("width", 0);
+                $("#progressbar").css("display", "block");
+                $("#bgpup2").css({ visibility: "visible" });
+                $("#cdialog2").css({ visibility: "visible" });
+                $("#lod").css({ visibility: "hidden" });
+                xhr.upload.addEventListener("progress", function (evt) {
+                    if (evt.lengthComputable) {
+                        var progress = Math.round(evt.loaded * 100 / evt.total);
+                        $("#progress").css("width", progress + "%");
+                        $("#progressPersent").empty();
+                        $("#progressPersent").append(progress + "%");
+                        $("#sizeUpload").empty();
+                        $('#sizeUpload').append(Math.round(evt.loaded / 1024) + "KB" + " / " + Math.round(evt.total / 1024) + "KB");
+
+                    }
+                }, false);
+
+                xhr.open("POST", '@Url.Action("Upload", "FileManager")');
+                xhr.send(data);
+                xhr.onreadystatechange = function () {
+                    if (xhr.readyState == 4 && xhr.status == 200) {
+
+                        $("#bgpup2").css({ visibility: "hidden" });
+                        $("#cdialog2").css({ visibility: "hidden" });
+                        //if (upp == true) {
+                        OpenFolder($("#ph").val());
+                        //upp = false;
+                        //}
+                        //Reset the image form so the file won't get uploaded again
+                    }
+                }
+
+                evt.preventDefault();
+            }
+        }
+        else {
+
+
+            alert("لطفا فایل مورد نظر را انتخاب کنید");
+
+
+            return;
+        }
+
+
+
+    }
+    function copyToClipboard() {
+        var $temp = $("<input>");
+        $("body").append($temp);
+        $temp.val($('.Selectt').children("a").attr("href")).select();
+        document.execCommand("copy");
+        $temp.remove();
+        alert("لینک این فایل کپی شد \n اکنون میتوانید لینک را در جای مورد نظر Paste کنید");
+    }
+</script>
+<style type="text/css">
+    th {
+        text-align: right;
+    }
+
+    .a1 {
+        background-color: black;
+        opacity: 0.5;
+        position: fixed;
+        left: 0px;
+        top: 0px;
+        width: 100%;
+        height: 100%;
+        z-index: 700000000;
+        visibility: hidden;
+    }
+
+    .b1 {
+        background-color: white;
+        border-radius: 20px;
+        padding: 20px;
+        position: fixed;
+        left: 30%;
+        z-index: 800000000000000;
+        top: 13%;
+        width: 500px;
+        visibility: hidden;
+    }
+</style>
+<div id="bgpup2" class="a1"></div>
+<div dir="rtl" id="cdialog2" class="b1">
+    <div>
+        <div class="bt" style="font-size:x-large">درحال آپلود فایل</div>
+        <div id="ll" style="display:none">
+            <div class="progress progress-striped active" style="text-align:center">
+                <div id="progress" style="width:0%" class="progress-bar progress-bar-success"></div>
+
+            </div>
+            <div id="progressPersent" class="progressPersent"></div>
+            <span id="sizeUpload"></span>
+        </div>
+    </div>
+    
+       </div>
